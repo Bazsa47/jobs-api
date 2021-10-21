@@ -3,6 +3,7 @@ package com.example.demo;
 import com.example.demo.Clients.Client;
 import com.example.demo.positions.Position;
 import com.example.demo.positions.PositionRepository;
+import com.example.demo.positions.vm.PositionVM;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,6 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -106,6 +108,7 @@ public class PositionControllerTest {
 
     @Test
     public void getPositions_whenThereAreMultiplePositionsInDb_receiveAllPositions() {
+        positionRepository.deleteAll();
         Position p1 = createValidPosition();
         positionRepository.save(p1);
         Position p2 = createValidPosition();
@@ -125,5 +128,32 @@ public class PositionControllerTest {
     public void getPosition_whenPositionIdExists_receiveOk() {
         ResponseEntity<Object> forEntity = getPositions(path+"/1",new ParameterizedTypeReference<Object>(){});
         assertThat(forEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void getPositions_whenLocationAndTitleIsSet_ReceiveOK() {
+        ResponseEntity<Object> forEntity = getPositions(path+"/search?location=eger&title=Butcher",new ParameterizedTypeReference<Object>(){});
+        assertThat(forEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void getPositions_receivePositionVM() {
+        positionRepository.save(createValidPosition());
+        ResponseEntity<List<PositionVM>> forEntity = getPositions(path,new ParameterizedTypeReference<List<PositionVM>>(){});
+        assertThat(forEntity.getBody().get(0).getUrl()).isNotNull();
+    }
+
+    @Test
+    public void getPositions_whenLocationIsSet_ReceiveJobs() {
+        positionRepository.save(new Position(1,"Butcher","Eger"));
+        ResponseEntity<List<PositionVM>> forEntity = getPositions(path+"/search?location=Eger",new ParameterizedTypeReference<List<PositionVM>>(){});
+        assertThat(forEntity.getBody().get(0).getUrl()).isNotNull();
+    }
+
+    @Test
+    public void getPositions_whenTitleIsSet_ReceiveJobs() {
+        positionRepository.save(new Position(1,"Butcher","Eger"));
+        ResponseEntity<List<PositionVM>> forEntity = getPositions(path+"/search?title=Butcher",new ParameterizedTypeReference<List<PositionVM>>(){});
+        assertThat(forEntity.getBody().get(0).getUrl()).isNotNull();
     }
 }
