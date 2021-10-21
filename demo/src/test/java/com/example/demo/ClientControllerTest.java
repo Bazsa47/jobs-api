@@ -53,7 +53,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void postClient_whenClientIsValid_userSavedToDatabase() {
+    public void postClient_whenClientIsValid_clientSavedToDatabase() {
         Client client = createValidClient();
         postClients(client,Object.class);
         assertThat(clientRepository.count()).isEqualTo(1);
