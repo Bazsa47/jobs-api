@@ -2,6 +2,7 @@ package com.example.demo;
 
 import com.example.demo.Clients.Client;
 import com.example.demo.Clients.ClientRepository;
+import com.example.demo.error.ApiError;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,14 +53,14 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void postUser_whenClientIsValid_userSavedToDatabase() {
+    public void postClient_whenClientIsValid_userSavedToDatabase() {
         Client client = createValidClient();
         postClients(client,Object.class);
         assertThat(clientRepository.count()).isEqualTo(1);
     }
 
     @Test
-    public void postUser_whenClientHasInvalidName_receiveBadRequest() {
+    public void postClient_whenClientHasInvalidName_receiveBadRequest() {
         Client client = createValidClient();
         String charOf101Characters = IntStream.rangeClosed(1,101).mapToObj(x -> "a").collect(Collectors.joining());
         client.setName(charOf101Characters);
@@ -68,7 +69,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void postUser_whenClientHasInvalidEmail_receiveBadRequest() {
+    public void postClient_whenClientHasInvalidEmail_receiveBadRequest() {
         Client client = createValidClient();
         String invalidEmail = "invalidemail";
         client.setEmail(invalidEmail);
@@ -77,7 +78,7 @@ public class ClientControllerTest {
     }
 
     @Test
-    public void postUser_whenClientHasDuplicateEmail_receiveBadRequest() {
+    public void postClient_whenClientHasDuplicateEmail_receiveBadRequest() {
         Client client = createValidClient();
         postClients(client, Object.class);
 
@@ -87,4 +88,18 @@ public class ClientControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
+    @Test
+    public void postClient_isValid_receiveApiKey() {
+        Client client = createValidClient();
+        ResponseEntity<ApiKey> response = postClients(client, ApiKey.class);
+        assertThat(response.getBody().getApiKey()).isNotNull();
+    }
+
+    @Test
+    public void postClient_isInvalid_receiveApiErrorWithValidationErrors() {
+        Client client = createValidClient();
+        client.setEmail("invalid");
+        ResponseEntity<ApiError> response = postClients(client, ApiError.class);
+        assertThat(response.getBody().getValidationErrors().containsKey("email")).isTrue();
+    }
 }
